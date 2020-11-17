@@ -19,8 +19,8 @@ package akamai
 import (
 	"context"
 	"encoding/json"
-	"testing"
 	log "github.com/sirupsen/logrus"
+	"testing"
 
 	dns "github.com/akamai/AkamaiOPEN-edgegrid-golang/configdns-v2"
 	"github.com/stretchr/testify/assert"
@@ -64,7 +64,7 @@ func createAkamaiStubProvider(stub *edgednsStub, domfilter endpoint.DomainFilter
 
 func (r *edgednsStub) createStubDataEntry(objtype string) {
 
-        log.Debugf("Creating stub data entry")
+	log.Debugf("Creating stub data entry")
 	if _, exists := r.stubData[objtype]; !exists {
 		r.stubData[objtype] = edgednsStubData{objType: objtype}
 	}
@@ -96,7 +96,7 @@ func (r *edgednsStub) setUpdateRecords(objtype string, records []interface{}) {
 
 func (r *edgednsStub) setCreateRecords(objtype string, records []interface{}) {
 
-        log.Debugf("Setting createrecords to %v", records)
+	log.Debugf("Setting createrecords to %v", records)
 	r.createStubDataEntry(objtype)
 	stubdata := r.stubData[objtype]
 	stubdata.createRecords = records
