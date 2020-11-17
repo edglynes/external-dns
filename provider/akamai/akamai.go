@@ -184,7 +184,7 @@ func (p AkamaiProvider) UpdateRecord(record *dns.RecordBody, zone string, recLoc
 	return record.Update(zone, recLock)
 }
 
-//Look here for endpoint documentation -> https://developer.akamai.com/api/web_performance/fast_dns_zone_management/v2.html#getzones
+// Fetch zones using Edgegrid DNS v2 API
 func (p AkamaiProvider) fetchZones() (akamaiZones, error) {
 	log.Debugf("Fetching Akamai Edge DNS zones")
 	filteredZones := akamaiZones{Zones: make([]akamaiZone, 0)}
