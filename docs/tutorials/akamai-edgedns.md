@@ -6,29 +6,29 @@ Akamai Edge DNS (formally known as FastDNS) provider support was first released 
 
 ### Zones
 
-The Akamai Edge DNS provider requires that the zones in which you want to manage kubernetes service endpoints already exist and are configured correctly. The provider does not add, remove or configure new zones in anyway. Edge DNS zones can be managed thru the [Akamai Control Center] (https://control.akamai.com)
+The Akamai Edge DNS provider requires that the zones in which you want to manage kubernetes service endpoints already exist and are configured correctly. The provider does not add, remove or configure new zones in anyway. Edge DNS zones can be created and managed thru the [Akamai Control Center] (https://control.akamai.com) [Akamai DevOps Tools](https://developer.akamai.com/devops), [Akamai CLI](https://developer.akamai.com/cli) and [Akamai Terraform Provider](https://developer.akamai.com/tools/integrations/terraform)
 
 ### Akamai Edge DNS Authentication
 
-The Akamai Edge DNS provider requires valid Akamai API authentication credentials to access zones and manage associated DNS records. 
+The Akamai Edge DNS provider requires valid Akamai Edgegrid API authentication credentials to access zones and manage associated DNS records. 
 
 Credentials can be provided to the provider either directly by key or indirectly via a file. The Akamai credential keys and mappings to the Akamai provider utilizing different presentation methods are:
 
-| Akamai | Provider  | Operating | Kubernetes |
-| Auth Key | Cmd Line | Environment | ConfigMap |
-| -------- | -------- | ------------------ | ----------- |
-| host | akamai-serviceconsumerdomain | EXTERNAL_DNS_AKAMAI_SERVICECONSUMERDOMAIN ||
-| access_oken | akamai-access-token | EXTERNAL_DNS_AKAMAI_ACCESS_TOKEN ||
-| client_token | akamai-client-token  | EXTERNAL_DNS_AKAMAI_CLIENT_TOKEN ||
-| client-secret | akamai-client-secret | EXTERNAL_DNS_AKAMAI_CLIENT_SECRET ||
+| Edgegrid Auth Key | External-DNS Cmd Line Key | Environment/ConfigMap Key | Description |
+| ----------------- | ------------------------- | ------------------------- | ----------- |
+| host | akamai-serviceconsumerdomain | EXTERNAL_DNS_AKAMAI_SERVICECONSUMERDOMAIN | Akamai Edgegrid API server |
+| access_oken | akamai-access-token | EXTERNAL_DNS_AKAMAI_ACCESS_TOKEN | Akamai Edgegrid API access token |
+| client_token | akamai-client-token  | EXTERNAL_DNS_AKAMAI_CLIENT_TOKEN |Akamai Edgegrid API client token |
+| client-secret | akamai-client-secret | EXTERNAL_DNS_AKAMAI_CLIENT_SECRET |Akamai Edgegrid API client secret |
 
 In addition to specfying auth credentials individually, the credentials my be referenced indirectly by using the Akamai Edgegrid .edgerc file convention.
 
-| Provider  | Operating | Kubernetes |
-| Cmd Line | Environment | ConfigMap |
-| -------- |  ------------------ | ----------- |
-| akamai-edgerc-path | EXTERNAL_DNS_AKAMAI_EDGERC_PATH ||
-| akamai-edgerc-section | EXTERNAL_DNS_AKAMAI_EDGERC_SECTION ||
+| External-DNS Cmd Line | Environment/ConfigMap | Description |
+| --------------------- | --------------------- | ----------- |
+| akamai-edgerc-path | EXTERNAL_DNS_AKAMAI_EDGERC_PATH | Accessible path to Edgegrid credentials file, e.g /home/test/.edgerc |
+| akamai-edgerc-section | EXTERNAL_DNS_AKAMAI_EDGERC_SECTION | Section in Edgegrid credentials file containing credentials |
+
+Note: akamai-edgerc-path and akamai-edgerc-section are present in External-DNS versions after v0.7.4
 
 [Akamai API Authentication](https://developer.akamai.com/getting-started/edgegrid) provides an overview and further information pertaining to the generation of auth credentials for API base applications and tools.
 
@@ -61,7 +61,7 @@ spec:
     spec:
       containers:
       - name: external-dns
-        image: k8s.gcr.io/external-dns/external-dns:v0.7.3
+        image: k8s.gcr.io/external-dns/external-dns:v0.7.4
         args:
         - --source=service  # or ingress or both
         - --provider=akamai
@@ -145,7 +145,7 @@ spec:
     spec:
       containers:
       - name: external-dns
-        image: k8s.gcr.io/external-dns/external-dns:v0.7.3
+        image: k8s.gcr.io/external-dns/external-dns:v0.7.4
         args:
         - --source=service  # or ingress or both
         - --provider=akamai

@@ -251,7 +251,10 @@ func (p AkamaiProvider) Records(context.Context) (endpoints []*endpoint.Endpoint
 			}
 			var temp interface{} = int64(recordset.TTL)
 			var ttl endpoint.TTL = endpoint.TTL(temp.(int64)) //endpoint.TTL)
-			endpoints = append(endpoints, endpoint.NewEndpointWithTTL(recordset.Name, recordset.Type, ttl, recordset.Rdata...))
+			endpoints = append(endpoints, endpoint.NewEndpointWithTTL(recordset.Name,
+				recordset.Type,
+				ttl,
+				trimTxtRdata(recordset.Rdata, recordset.Type)...))
 			log.Debugf("Fetched endpoint DNSName: '%s' RecordType: '%s' Rdata: '%s')", recordset.Name, recordset.Type, recordset.Rdata)
 		}
 	}
@@ -331,16 +334,44 @@ func newAkamaiRecordset(dnsName, recordType string, ttl int, targets []string) d
 	}
 }
 
-func cleanTargets(tgts endpoint.Targets, rtype string) []string {
-	var temp interface{} = []string(tgts)
-	var targets []string = temp.([]string)
+// cleanTargets preps recordset rdata if necessary for EdgeDNS
+func cleanTargets(rtype string, targets ...string) []string {
+	log.Debugf("Targets to clean: [%v]", targets)
+	//var targets []string = tgts
 	if rtype == "CNAME" || rtype == "SRV" {
 		for idx, target := range targets {
 			targets[idx] = strings.TrimSuffix(target, ".")
 		}
+	} else if rtype == "TXT" {
+		for idx, target := range targets {
+			log.Debugf("TXT data to clean: [%s]", target)
+			// need to embed text data in quotes. Make sure not piling on
+			target = strings.Trim(target, "\"")
+			// bug in DNS API with embedded quotes.
+			if strings.Contains(target, "owner") && strings.Contains(target, "\"") {
+				target = strings.ReplaceAll(target, "\"", "`")
+			}
+			targets[idx] = "\"" + target + "\""
+		}
 	}
+	log.Debugf("Clean targets: [%v]", targets)
 
 	return targets
+}
+
+// trimTxtRdata removes surrounding quotes for received TXT rdata
+func trimTxtRdata(rdata []string, rtype string) []string {
+	if rtype == "TXT" {
+		for idx, d := range rdata {
+			//rdata[idx] = strings.Trim(d, "\"")
+			if strings.Contains(d, "`") {
+				rdata[idx] = strings.ReplaceAll(d, "`", "\"")
+			}
+		}
+	}
+	log.Debugf("Trimmed data: [%v]", rdata)
+
+	return rdata
 }
 
 func ttlAsInt(src endpoint.TTL) int {
@@ -370,7 +401,7 @@ func (p AkamaiProvider) createRecordsets(zoneNameIDMapper provider.ZoneIDName, e
 			newrec := newAkamaiRecordset(endpoint.DNSName,
 				endpoint.RecordType,
 				ttlAsInt(endpoint.RecordTTL),
-				cleanTargets(endpoint.Targets, endpoint.RecordType))
+				cleanTargets(endpoint.RecordType, endpoint.Targets...))
 			logfields := log.Fields{
 				"record": newrec.Name,
 				"type":   newrec.Type,
@@ -449,7 +480,7 @@ func (p AkamaiProvider) updateNewRecordsets(zoneNameIDMapper provider.ZoneIDName
 			return err
 		}
 		rec.TTL = ttlAsInt(endpoint.RecordTTL)
-		rec.Target = cleanTargets(endpoint.Targets, endpoint.RecordType)
+		rec.Target = cleanTargets(endpoint.RecordType, endpoint.Targets...)
 		if err := p.client.UpdateRecord(rec, zoneName, true); err != nil {
 			log.Errorf("Akamai Edge DNS recordset update failed. Error: %s", err.Error())
 			return err
