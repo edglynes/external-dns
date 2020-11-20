@@ -1,12 +1,12 @@
-# Setting up ExternalDNS for Services on Akamai Edge DNS
+# Setting up External-DNS for Services on Akamai Edge DNS
 
 ## Prerequisites
 
-Akamai Edge DNS (formally known as FastDNS) provider support was first released in External-DNS v0.5.18
+Akamai Edge DNS (formally known as Fast DNS) provider support was first released in External-DNS v0.5.18
 
 ### Zones
 
-The Akamai Edge DNS provider requires that the zones in which you want to manage kubernetes service endpoints already exist and are configured correctly. The provider does not add, remove or configure new zones in anyway. Edge DNS zones can be created and managed thru the [Akamai Control Center] (https://control.akamai.com) [Akamai DevOps Tools](https://developer.akamai.com/devops), [Akamai CLI](https://developer.akamai.com/cli) and [Akamai Terraform Provider](https://developer.akamai.com/tools/integrations/terraform)
+External-DNS manages service endpoints in existing DNS zones. The Akamai provider does not add, remove or configure new zones in anyway. Edge DNS zones can be created and managed thru the [Akamai Control Center](https://control.akamai.com) or [Akamai DevOps Tools](https://developer.akamai.com/devops), [Akamai CLI](https://developer.akamai.com/cli) and [Akamai Terraform Provider](https://developer.akamai.com/tools/integrations/terraform)
 
 ### Akamai Edge DNS Authentication
 
@@ -17,11 +17,11 @@ Credentials can be provided to the provider either directly by key or indirectly
 | Edgegrid Auth Key | External-DNS Cmd Line Key | Environment/ConfigMap Key | Description |
 | ----------------- | ------------------------- | ------------------------- | ----------- |
 | host | akamai-serviceconsumerdomain | EXTERNAL_DNS_AKAMAI_SERVICECONSUMERDOMAIN | Akamai Edgegrid API server |
-| access_oken | akamai-access-token | EXTERNAL_DNS_AKAMAI_ACCESS_TOKEN | Akamai Edgegrid API access token |
+| access_token | akamai-access-token | EXTERNAL_DNS_AKAMAI_ACCESS_TOKEN | Akamai Edgegrid API access token |
 | client_token | akamai-client-token  | EXTERNAL_DNS_AKAMAI_CLIENT_TOKEN |Akamai Edgegrid API client token |
 | client-secret | akamai-client-secret | EXTERNAL_DNS_AKAMAI_CLIENT_SECRET |Akamai Edgegrid API client secret |
 
-In addition to specfying auth credentials individually, the credentials my be referenced indirectly by using the Akamai Edgegrid .edgerc file convention.
+In addition to specifying auth credentials individually, the credentials may be referenced indirectly by using the Akamai Edgegrid .edgerc file convention.
 
 | External-DNS Cmd Line | Environment/ConfigMap | Description |
 | --------------------- | --------------------- | ----------- |
@@ -32,14 +32,14 @@ Note: akamai-edgerc-path and akamai-edgerc-section are present in External-DNS v
 
 [Akamai API Authentication](https://developer.akamai.com/getting-started/edgegrid) provides an overview and further information pertaining to the generation of auth credentials for API base applications and tools.
 
-The following example defines and references a Kubernetes ConfigMap secret is used by referencing the secret and its keys in the env section of the deployment.
+The following example defines and references a Kubernetes ConfigMap secret, applied by referencing the secret and its keys in the env section of the deployment.
 
 
-## Deploy ExternalDNS
+## Deploy External-DNS
 
-An operational ExternalDNS deployment consists of an ExternalDNS container and service. The following sections demonstrate the ConfigMap objects that would make up an example functional external DNS kubernetes configuration.
+An operational External-DNS deployment consists of an External-DNS container and service. The following sections demonstrate the ConfigMap objects that would make up an example functional external DNS kubernetes configuration utilizing NGINX as the exposed service.
 
-Connect your `kubectl` client to the cluster with which you want to test ExternalDNS, and then apply one of the following manifest files for deployment:
+Connect your `kubectl` client to the cluster with which you want to test External-DNS, and then apply one of the following manifest files for deployment:
 
 ### Manifest (for clusters without RBAC enabled)
 
@@ -176,7 +176,7 @@ spec:
               key: EXTERNAL_DNS_AKAMAI_ACCESS_TOKEN
 ```
 
-Create the deployment for ExternalDNS:
+Create the deployment for External-DNS:
 
 ```
 $ kubectl create -f externaldns.yaml
@@ -237,9 +237,15 @@ The records can be validated using the [Akamai Control Center](http://control.ak
  
 ## Cleanup
 
-Once you successfully configure and verify record management via ExternalDNS, you can delete the tutorial's example:
+Once you successfully configure and verify record management via External-DNS, you can delete the tutorial's example:
 
 ```
 $ kubectl delete -f nginx.yaml
 $ kubectl delete -f externaldns.yaml
 ```
+
+## Additional Information
+
+* The Akamai provider allows the administrative user to filter zones by both name (domain-filter) and contract Id (zone-id-filter). The Edge DNS API will return a '500 Internal Error' if an invalid contract Id is provided.
+* The provider will substitute any embedded quotes in TXT records with `` ` `` (back tick) when writing the records to the API.
+   
